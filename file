@@ -1,78 +1,105 @@
-$ ./manage.py makemigrations
-Traceback (most recent call last):
-  File "C:\Users\IS\Downloads\login\project\manage.py", line 22, in <module>
-    main()
-    ~~~~^^
-  File "C:\Users\IS\Downloads\login\project\manage.py", line 18, in main
-    execute_from_command_line(sys.argv)
-    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
-    utility.execute()
-    ~~~~~~~~~~~~~~~^^
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
-    self.fetch_command(subcommand).run_from_argv(self.argv)
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\core\management\base.py", line 422, in run_from_argv
-    self.execute(*args, **cmd_options)
-    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\core\management\base.py", line 463, in execute
-    self.check(**check_kwargs)
-    ~~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\core\management\base.py", line 498, in check
-    all_issues = checks.run_checks(
-        app_configs=app_configs,
-    ...<2 lines>...
-        databases=databases,
+from django.db import models
+from django.contrib.auth.models import User  # <--- Берем стандартного юзера
+from django.core.validators import MinValueValidator
+
+
+class Course(models.Model):
+    title = models.CharField("Название", max_length=255)
+    image = models.ImageField("Изображение", upload_to='courses/', blank=True, null=True)
+    price = models.DecimalField(
+        "Цена", max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(0)]
     )
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\core\checks\registry.py", line 100, in run_checks
-    new_errors = check(app_configs=app_configs, databases=databases)
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\core\checks\urls.py", line 44, in check_url_namespaces_unique
-    all_namespaces = _load_all_namespaces(resolver)
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\core\checks\urls.py", line 63, in _load_all_namespaces
-    url_patterns = getattr(resolver, "url_patterns", [])
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\utils\functional.py", line 47, in __get__
-    res = instance.__dict__[self.name] = self.func(instance)
-                                         ~~~~~~~~~^^^^^^^^^^
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\urls\resolvers.py", line 729, in url_patterns
-    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
-                       ^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\utils\functional.py", line 47, in __get__
-    res = instance.__dict__[self.name] = self.func(instance)
-                                         ~~~~~~~~~^^^^^^^^^^
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\urls\resolvers.py", line 722, in urlconf_module
-    return import_module(self.urlconf_name)
-  File "C:\Python313\Lib\importlib\__init__.py", line 88, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
-  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
-  File "C:\Users\IS\Downloads\login\project\project\urls.py", line 22, in <module>
-    path('', include('app.urls'))
-             ~~~~~~~^^^^^^^^^^^^
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\urls\conf.py", line 39, in include
-    urlconf_module = import_module(urlconf_module)
-  File "C:\Python313\Lib\importlib\__init__.py", line 88, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
-  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
-  File "C:\Users\IS\Downloads\login\project\app\urls.py", line 2, in <module>
-    from . import views
-  File "C:\Users\IS\Downloads\login\project\app\views.py", line 4, in <module>
-    from .forms import UserWithPhoneCreationForm, RequestForm
-  File "C:\Users\IS\Downloads\login\project\app\forms.py", line 6, in <module>
-    class UserWithPhoneCreationForm(UserCreationForm):
-        class Meta(UserCreationForm.Meta):
-            fields = ("username", "phone")
-  File "C:\Users\IS\Downloads\login\.venv\Lib\site-packages\django\forms\models.py", line 336, in __new__
-    raise FieldError(message)
-django.core.exceptions.FieldError: Unknown field(s) (phone) specified for User
-(.venv) 
+    duration = models.CharField("Длительность", max_length=50)
+
+    def __str__(self):
+        return self.title
+
+
+class Request(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    status = models.CharField(
+        choices=[('new', 'Новая'), ('confirmed', 'Подтверждено'), ('completed', 'Завершено')],
+        default='new', max_length=20
+    )
+    comment = models.TextField(blank=True, null=True)
+
+
+
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django.core.validators import RegexValidator
+from .models import Request
+
+
+class UserWithPhoneCreationForm(UserCreationForm):
+    # Добавляем поле телефона прямо в форму
+    phone = forms.CharField(
+        label="Номер телефона",
+        max_length=17,
+        validators=[RegexValidator(r"^\+?9\d{2} \d{3}-\d{2}-\d{2}$", "Формат: +999 999-99-99")]
+    )
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ("username",) # Поля, которые берем из базовой модели
+
+    # Переопределяем сохранение, чтобы телефон ушел в базу
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.first_name = self.cleaned_data['phone'] # Пишем телефон в first_name
+        if commit:
+            user.save()
+        return user
+
+
+class RequestForm(forms.ModelForm):
+    class Meta:
+        model = Request
+        fields = ('course', 'comment')
+
+
+
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, ListView
+from django.shortcuts import redirect
+from .forms import UserWithPhoneCreationForm, RequestForm
+from .models import Course, Request
+
+
+class MyRegistrationView(CreateView):
+    form_class = UserWithPhoneCreationForm
+    template_name = "registration.html"
+    success_url = reverse_lazy('login')
+
+
+class CourseListView(ListView):
+    model = Course
+    template_name = "services.html"
+    context_object_name = "page_obj"
+    paginate_by = 3
+
+
+class CabinetView(CreateView):
+    model = Request
+    form_class = RequestForm
+    template_name = "cabinet.html"
+    success_url = reverse_lazy('cabinet')
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['requests'] = Request.objects.filter(user=self.request.user)
+        return context
+
+

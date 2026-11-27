@@ -1,102 +1,144 @@
-@font-face {
-    font-family: 'Rubik';
-    src: url('../fonts/Rubik/Rubik-Regular.ttf') format('truetype');
-    font-weight: 400;
-}
-@font-face {
-    font-family: 'Rubik';
-    src: url('../fonts/Rubik/Rubik-Medium.ttf') format('truetype');
-    font-weight: 500;
-}
-@font-face {
-    font-family: 'Rubik';
-    src: url('../fonts/Rubik/Rubik-Bold.ttf') format('truetype');
-    font-weight: 700;
-}
+{% extends "base.html" %}
+{% load static %}
 
-:root {
-    --blue: #007BFF;
-    --teal: #4CCFE0;
-    --white: #FFFFFF;
-    --green: #28A745;
-    --gray: #6C757D;
-}
+{% block content %}
+    <h1>Аренда речного транспорта</h1>
+    <p style="margin-bottom: 20px;">Катера, круизные лайнеры и яхты для вашего отдыха.</p>
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+    <div class="slider-container">
+        <img src="{% static 'images/image (1).jpeg' %}" class="slide active" alt="Катер">
+        <img src="{% static 'images/image (2).jpeg' %}" class="slide" alt="Лайнер">
+        <img src="{% static 'images/image (3).jpeg' %}" class="slide" alt="Яхта">
+        <img src="{% static 'images/image.jpeg' %}" class="slide" alt="Транспорт">
+    </div>
 
-body {
-    font-family: 'Rubik', sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
-    line-height: 1.6;
-    font-size: 16px;
-}
+    <h2>Почему выбирают нас?</h2>
+    <div class="grid">
+        <div class="card">
+            <h3>Безопасность</h3>
+            <p>Все суда проходят регулярный техосмотр.</p>
+        </div>
+        <div class="card">
+            <h3>Опытные капитаны</h3>
+            <p>Наши капитаны имеют стаж более 10 лет.</p>
+        </div>
+        <div class="card">
+            <h3>Удобная оплата</h3>
+            <p>Оплата картой или наличными при посадке.</p>
+        </div>
+    </div>
 
-h1 { font-size: 36px; font-weight: 700; color: var(--blue); margin-bottom: 20px; }
-h2 { font-size: 24px; font-weight: 500; color: var(--blue); margin-bottom: 15px; }
-h3 { font-size: 18px; font-weight: 500; color: var(--gray); margin-bottom: 10px; }
-
-header {
-    background-color: var(--white);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    padding: 15px 0;
-    margin-bottom: 30px;
-}
-.nav-container {
-    max-width: 1200px; margin: 0 auto; display: flex; 
-    justify-content: space-between; align-items: center; padding: 0 20px;
-}
-.logo { font-size: 24px; font-weight: 700; color: var(--blue); text-decoration: none; }
-nav a {
-    color: var(--gray); text-decoration: none; margin-left: 20px;
-    font-weight: 500; transition: color 0.3s;
-}
-nav a:hover { color: var(--teal); }
-
-footer {
-    background: var(--white); text-align: center; padding: 20px 0; margin-top: 40px;
-    border-top: 1px solid #eee;
-}
-footer img { width: 40px; margin-top: 10px; transition: transform 0.3s; }
-footer img:hover { transform: scale(1.1); }
-
-.container { max-width: 1000px; margin: 0 auto; padding: 0 20px 50px; }
-
-.card {
-    background: var(--white); border: 1px solid #eee;
-    border-radius: 10px; padding: 20px; margin-bottom: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-form p { margin-bottom: 15px; }
-input, select, textarea {
-    width: 100%; padding: 10px; border: 1px solid #ccc;
-    border-radius: 5px; font-family: 'Rubik', sans-serif; font-size: 14px;
-}
-button, .btn {
-    background-color: var(--blue); color: var(--white);
-    border: none; padding: 12px 24px; border-radius: 5px;
-    font-size: 16px; font-weight: 500; cursor: pointer;
-    transition: background 0.3s; display: inline-block; text-decoration: none; text-align: center;
-}
-button:hover, .btn:hover { background-color: var(--teal); }
-
-.slider-container {
-    width: 100%; height: 400px; overflow: hidden;
-    border-radius: 10px; position: relative; margin-bottom: 30px;
-    background: #000;
-}
-.slide { display: none; width: 100%; height: 100%; object-fit: cover; }
-.slide.active { display: block; }
-
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-
-@media (max-width: 768px) {
-    h1 { font-size: 28px; }
-    h2 { font-size: 20px; }
-    .nav-container { flex-direction: column; gap: 15px; text-align: center; }
-    nav a { display: block; margin: 5px 0; }
-    .slider-container { height: 220px; }
-    .grid { grid-template-columns: 1fr; }
-}
+    <script>
+        let slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        function nextSlide() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+        setInterval(nextSlide, 3000);
+    </script>
+{% endblock %}
 
 
+
+
+
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="card" style="max-width: 500px; margin: 40px auto;">
+        <h2>Регистрация</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" style="width: 100%; margin-top: 10px;">Зарегистрироваться</button>
+        </form>
+        <p style="margin-top: 15px; text-align: center;">
+            Уже есть аккаунт? <a href="{% url 'login' %}" style="color: var(--teal);">Войти</a>
+        </p>
+    </div>
+{% endblock %}
+
+
+
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="card" style="max-width: 400px; margin: 40px auto;">
+        <h2>Вход</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" style="width: 100%; margin-top: 10px;">Войти</button>
+        </form>
+        <p style="margin-top: 15px; text-align: center;">
+            <a href="{% url 'register' %}" style="color: var(--teal);">Еще не зарегистрированы? Регистрация</a>
+        </p>
+    </div>
+{% endblock %}
+
+
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Личный кабинет</h1>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Новая заявка</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" style="width: 100%; margin-top: 10px;">Отправить</button>
+            </form>
+        </div>
+
+        <div>
+            <h2>{% if user.is_staff %}Все заявки (Админ){% else %}Мои заявки{% endif %}</h2>
+            {% for app in applications %}
+                <div class="card">
+                    <h3>{{ app.transport.name }}</h3>
+                    <p><strong>Дата:</strong> {{ app.start_date }}</p>
+                    <p><strong>Оплата:</strong> {{ app.payment_method }}</p>
+                    <p><strong>Статус:</strong> <span style="color: var(--blue); font-weight: bold;">{{ app.get_status_display }}</span></p>
+                    
+                    {% if user.is_staff %}
+                        <a href="/admin/app/application/{{ app.id }}/change/" class="btn" style="display: inline-block; margin-top: 10px; font-size: 14px; padding: 8px 12px;">Изменить в админке</a>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="card">
+                    <p>У вас пока нет заявок. Создайте первую!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+
+
+
+
+
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <h1>Наш транспорт</h1>
+    <div class="grid">
+        {% for t in transports %}
+            <div class="card">
+                {% if t.image %}
+                    <img src="{{ t.image.url }}" alt="{{ t.name }}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
+                {% else %}
+                    <img src="{% static 'images/image (2).jpeg' %}" alt="Транспорт" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
+                {% endif %}
+                
+                <h3>{{ t.name }}</h3>
+                <p style="color: var(--gray);">{{ t.get_transport_type_display }}</p>
+                <a href="{% url 'cabinet' %}" class="btn" style="display: block; text-align: center; margin-top: 10px;">Забронировать</a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

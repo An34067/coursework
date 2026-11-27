@@ -1,86 +1,54 @@
+from django.shortcuts import render, redirect
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+from .models import Application
+from .forms import ApplicationForm, UserWithPhoneCreationForm
+
+class ProfileView(CreateView):
+    model = Application
+    form_class = ApplicationForm
+    template_name = "profile.html"
+    success_url = reverse_lazy('profile')
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_staff:
+            context['applications'] = Application.objects.all().order_by('-id')
+        else:
+            context['applications'] = Application.objects.filter(user=self.request.user).order_by('-id')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if 'save_review' in request.POST:
+            app_id = request.POST.get('application_id')
+            review_text = request.POST.get('review_text')
+            
+            application = Application.objects.filter(id=app_id, user=request.user).first()
+            
+            if application and application.status == 'completed':
+                application.review = review_text
+                application.save()
+                
+            return redirect('profile')
+
+        return super().post(request, *args, **kwargs)
+
+
+
+
+
+
 {% extends "base.html" %}
 {% load static %}
-
-{% block content %}
-    <h1>Аренда речного транспорта</h1>
-    <p style="margin-bottom: 20px;">Катера, круизные лайнеры и яхты для вашего отдыха.</p>
-
-    <div class="slider-container">
-        <img src="{% static 'images/image (1).jpeg' %}" class="slide active" alt="Катер">
-        <img src="{% static 'images/image (2).jpeg' %}" class="slide" alt="Лайнер">
-        <img src="{% static 'images/image (3).jpeg' %}" class="slide" alt="Яхта">
-        <img src="{% static 'images/image.jpeg' %}" class="slide" alt="Транспорт">
-    </div>
-
-    <h2>Почему выбирают нас?</h2>
-    <div class="grid">
-        <div class="card">
-            <h3>Безопасность</h3>
-            <p>Все суда проходят регулярный техосмотр.</p>
-        </div>
-        <div class="card">
-            <h3>Опытные капитаны</h3>
-            <p>Наши капитаны имеют стаж более 10 лет.</p>
-        </div>
-        <div class="card">
-            <h3>Удобная оплата</h3>
-            <p>Оплата картой или наличными при посадке.</p>
-        </div>
-    </div>
-
-    <script>
-        let slides = document.querySelectorAll('.slide');
-        let currentSlide = 0;
-        function nextSlide() {
-            slides[currentSlide].classList.remove('active');
-            currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].classList.add('active');
-        }
-        setInterval(nextSlide, 3000);
-    </script>
-{% endblock %}
-
-
-
-
-
-{% extends "base.html" %}
-
-{% block content %}
-    <div class="card" style="max-width: 500px; margin: 40px auto;">
-        <h2>Регистрация</h2>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" style="width: 100%; margin-top: 10px;">Зарегистрироваться</button>
-        </form>
-        <p style="margin-top: 15px; text-align: center;">
-            Уже есть аккаунт? <a href="{% url 'login' %}" style="color: var(--teal);">Войти</a>
-        </p>
-    </div>
-{% endblock %}
-
-
-
-{% extends "base.html" %}
-
-{% block content %}
-    <div class="card" style="max-width: 400px; margin: 40px auto;">
-        <h2>Вход</h2>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" style="width: 100%; margin-top: 10px;">Войти</button>
-        </form>
-        <p style="margin-top: 15px; text-align: center;">
-            <a href="{% url 'register' %}" style="color: var(--teal);">Еще не зарегистрированы? Регистрация</a>
-        </p>
-    </div>
-{% endblock %}
-
-
-{% extends "base.html" %}
-
 {% block content %}
     <h1>Личный кабинет</h1>
 
@@ -106,6 +74,20 @@
                     {% if user.is_staff %}
                         <a href="/admin/app/application/{{ app.id }}/change/" class="btn" style="display: inline-block; margin-top: 10px; font-size: 14px; padding: 8px 12px;">Изменить в админке</a>
                     {% endif %}
+
+                    {% if app.status == 'completed' %}
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                        {% if app.review %}
+                            <p><strong>Ваш отзыв:</strong> {{ app.review }}</p>
+                        {% else %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="application_id" value="{{ app.id }}">
+                                <textarea name="review_text" rows="2" placeholder="Оставьте ваш отзыв о поездке..." required></textarea>
+                                <button type="submit" name="save_review" class="btn" style="margin-top: 10px; font-size: 14px; padding: 8px 12px;">Сохранить отзыв</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
                 </div>
             {% empty %}
                 <div class="card">
@@ -113,32 +95,5 @@
                 </div>
             {% endfor %}
         </div>
-    </div>
-{% endblock %}
-
-
-
-
-
-
-{% extends "base.html" %}
-{% load static %}
-
-{% block content %}
-    <h1>Наш транспорт</h1>
-    <div class="grid">
-        {% for t in transports %}
-            <div class="card">
-                {% if t.image %}
-                    <img src="{{ t.image.url }}" alt="{{ t.name }}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
-                {% else %}
-                    <img src="{% static 'images/image (2).jpeg' %}" alt="Транспорт" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
-                {% endif %}
-                
-                <h3>{{ t.name }}</h3>
-                <p style="color: var(--gray);">{{ t.get_transport_type_display }}</p>
-                <a href="{% url 'cabinet' %}" class="btn" style="display: block; text-align: center; margin-top: 10px;">Забронировать</a>
-            </div>
-        {% endfor %}
     </div>
 {% endblock %}
